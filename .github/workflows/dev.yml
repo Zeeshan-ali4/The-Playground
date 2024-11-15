@@ -37,7 +37,7 @@ jobs:
           gcloud compute instances create test-instance \
             --zone=europe-west4-a \
             --machine-type=f1-micro \
-            --image-family=debian-10 \
+            --image-family=debian-11 \
             --image-project=debian-cloud
 
       - name: Verify VM instance creation

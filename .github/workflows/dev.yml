@@ -5,6 +5,10 @@ on:
     branches:
       - Dev
 
+permissions:            # Add this section
+  id-token: write        # Required for OIDC token generation
+  contents: read         # Allows access to the repository contents
+
 jobs:
   build:
     runs-on: ubuntu-latest

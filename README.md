@@ -1,9 +1,3 @@
-# Noavant
-
-## Overview
-
-Welcome to the Noavant! This app is designed for aspiring fashion stylists, models, and fashion professionals to showcase their creativity, collaborate on fashion projects, and participate in an integrated marketplace. 
-
 ## Tech Stack 
 
 - Framework: Flutter (Dart)

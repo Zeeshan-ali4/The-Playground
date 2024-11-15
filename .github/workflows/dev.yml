@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Authenticate to Google Cloud with Workload Identity Federation
-        uses: google-github-actions/auth@v0
+        uses: google-github-actions/auth@v1
         with:
           workload_identity_provider: "projects/147961138027/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-pool"
           service_account: "github-ci-cd-dev@dev-env-441417.iam.gserviceaccount.com"

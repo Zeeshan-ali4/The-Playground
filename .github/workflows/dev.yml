@@ -31,22 +31,36 @@ jobs:
           gcloud config set compute/region europe-west4
           gcloud config set compute/zone europe-west4-a
 
-      - name: Create VM instance for testing
+      - name: Read and Create Resources
         run: |
-          echo "Creating a VM instance in europe-west4-a for testing integration"
-          gcloud compute instances create test-instance \
-            --zone=europe-west4-a \
-            --machine-type=f1-micro \
-            --image-family=debian-11 \
-            --image-project=debian-cloud
+          echo "Reading resources configuration"
+          RESOURCES=$(jq -c '.resources[]' config/resources.json)
 
-      - name: Verify VM instance creation
-        run: |
-          echo "Checking if the VM instance was created"
-          gcloud compute instances list --filter="name=('test-instance')"
+          for RESOURCE in $RESOURCES; do
+            NAME=$(echo $RESOURCE | jq -r '.name')
+            ZONE=$(echo $RESOURCE | jq -r '.zone')
+            MACHINE_TYPE=$(echo $RESOURCE | jq -r '.machine_type')
+            IMAGE_FAMILY=$(echo $RESOURCE | jq -r '.image_family')
+            IMAGE_PROJECT=$(echo $RESOURCE | jq -r '.image_project')
 
-      - name: Cleanup VM instance
+            echo "Creating resource: $NAME"
+            gcloud compute instances create $NAME \
+              --zone=$ZONE \
+              --machine-type=$MACHINE_TYPE \
+              --image-family=$IMAGE_FAMILY \
+              --image-project=$IMAGE_PROJECT
+          done
+
+      - name: Cleanup Resources
         if: always()  # Run cleanup even if previous steps fail
         run: |
-          echo "Deleting the test VM instance"
-          gcloud compute instances delete test-instance --zone=europe-west4-a --quiet
+          echo "Cleaning up resources"
+          RESOURCES=$(jq -c '.resources[]' config/resources.json)
+          
+          for RESOURCE in $RESOURCES; do
+            NAME=$(echo $RESOURCE | jq -r '.name')
+            ZONE=$(echo $RESOURCE | jq -r '.zone')
+            
+            echo "Deleting resource: $NAME"
+            gcloud compute instances delete $NAME --zone=$ZONE --quiet
+          done

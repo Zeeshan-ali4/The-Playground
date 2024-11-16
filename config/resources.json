@@ -1,0 +1,20 @@
+{
+  "resources": [
+    {
+      "type": "vm",
+      "name": "test-instance-1",
+      "zone": "europe-west4-a",
+      "machine_type": "f1-micro",
+      "image_family": "debian-11",
+      "image_project": "debian-cloud"
+    },
+    {
+      "type": "vm",
+      "name": "test-instance-2",
+      "zone": "europe-west4-b",
+      "machine_type": "e2-micro",
+      "image_family": "debian-11",
+      "image_project": "debian-cloud"
+    }
+  ]
+}

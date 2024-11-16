@@ -22,15 +22,18 @@ jobs:
         id: create-matrix
         run: |
           echo "Reading resources configuration"
-          RESOURCES=$(jq -c '.resources[]' config/resources.json)
+          RESOURCES=$(jq -c '.resources' config/resources.json)
 
           # Define batch size
           BATCH_SIZE=5
           echo "Splitting resources into batches of size $BATCH_SIZE"
-          MATRIX=$(echo $RESOURCES | jq -c "[.[]] | (.[0:] | split($BATCH_SIZE))")
+          
+          # Group resources into batches
+          MATRIX=$(echo $RESOURCES | jq -c "[reduce range(0; length; $BATCH_SIZE) as \$i ([]; . + [.[\$i:\$i+$BATCH_SIZE]])]")
 
-          echo "Matrix=$MATRIX" >> $GITHUB_OUTPUT
-
+          echo "Matrix=$MATRIX"
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+          
   process-resources:
     needs: generate-matrix
     runs-on: ubuntu-latest

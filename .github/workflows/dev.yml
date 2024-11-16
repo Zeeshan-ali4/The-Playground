@@ -5,14 +5,40 @@ on:
     branches:
       - Dev
 
-permissions:            # Add this section
-  id-token: write        # Required for OIDC token generation
-  contents: read         # Allows access to the repository contents
+permissions:
+  id-token: write  # Required for OIDC token generation
+  contents: read   # Allows access to the repository contents
 
 jobs:
-  build:
+  generate-matrix:
     runs-on: ubuntu-latest
-    environment: Dev  # This specifies that the 'Dev' environment secrets will be used
+    outputs:
+      resource-matrix: ${{ steps.create-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Generate Dynamic Resource Matrix
+        id: create-matrix
+        run: |
+          echo "Reading resources configuration"
+          RESOURCES=$(jq -c '.resources[]' config/resources.json)
+
+          # Define batch size
+          BATCH_SIZE=5
+          echo "Splitting resources into batches of size $BATCH_SIZE"
+          MATRIX=$(echo $RESOURCES | jq -c "[.[]] | (.[0:] | split($BATCH_SIZE))")
+
+          echo "Matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  process-resources:
+    needs: generate-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        batch: ${{ fromJson(needs.generate-matrix.outputs.resource-matrix) }}
+      max-parallel: 3  # Limit the number of parallel jobs to avoid overloading
+    environment: Dev
 
     steps:
       - name: Checkout code
@@ -31,12 +57,10 @@ jobs:
           gcloud config set compute/region europe-west4
           gcloud config set compute/zone europe-west4-a
 
-      - name: Read and Create Resources
+      - name: Process Resource Batch
         run: |
-          echo "Reading resources configuration"
-          RESOURCES=$(jq -c '.resources[]' config/resources.json)
-
-          for RESOURCE in $RESOURCES; do
+          echo "Processing resource batch"
+          for RESOURCE in ${{ matrix.batch }}; do
             NAME=$(echo $RESOURCE | jq -r '.name')
             ZONE=$(echo $RESOURCE | jq -r '.zone')
             MACHINE_TYPE=$(echo $RESOURCE | jq -r '.machine_type')
@@ -51,8 +75,51 @@ jobs:
               --image-project=$IMAGE_PROJECT
           done
 
+  validate-resources:
+    needs: process-resources
+    runs-on: ubuntu-latest
+    environment: Dev
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Authenticate to Google Cloud with Workload Identity Federation
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: "projects/147961138027/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-pool"
+          service_account: "github-ci-cd-dev@dev-env-441417.iam.gserviceaccount.com"
+
+      - name: Validate Resources
+        run: |
+          echo "Validating created resources"
+          RESOURCES=$(jq -c '.resources[]' config/resources.json)
+          
+          for RESOURCE in $RESOURCES; do
+            NAME=$(echo $RESOURCE | jq -r '.name')
+            ZONE=$(echo $RESOURCE | jq -r '.zone')
+            
+            echo "Validating resource: $NAME in zone: $ZONE"
+            gcloud compute instances describe $NAME --zone=$ZONE || echo "Resource $NAME validation failed"
+          done
+
+  cleanup-resources:
+    if: always()  # Run cleanup even if previous steps fail
+    needs: [process-resources, validate-resources]
+    runs-on: ubuntu-latest
+    environment: Dev
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Authenticate to Google Cloud with Workload Identity Federation
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: "projects/147961138027/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-pool"
+          service_account: "github-ci-cd-dev@dev-env-441417.iam.gserviceaccount.com"
+
       - name: Cleanup Resources
-        if: always()  # Run cleanup even if previous steps fail
         run: |
           echo "Cleaning up resources"
           RESOURCES=$(jq -c '.resources[]' config/resources.json)

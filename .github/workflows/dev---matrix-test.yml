@@ -1,9 +1,9 @@
-name: Dev---matrix-test Pipeline - Terraform Integration
+name: dev---matrix-test Pipeline - Terraform Integration
 
 on:
   push:
     branches:
-      - Dev---matrix-test
+      - dev---matrix-test
 
 permissions:
   id-token: write        # Required for OIDC token generation

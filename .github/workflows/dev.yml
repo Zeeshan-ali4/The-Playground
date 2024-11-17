@@ -1,4 +1,4 @@
-name: Dev Pipeline - Test Integration
+name: Dev Pipeline - Terraform Integration
 
 on:
   push:
@@ -6,137 +6,56 @@ on:
       - Dev
 
 permissions:
-  id-token: write  # Required for OIDC token generation
-  contents: read   # Allows access to the repository contents
+  id-token: write        # Required for OIDC token generation
+  contents: read         # Allows access to the repository contents
 
 jobs:
-  generate-matrix:
+  terraform:
     runs-on: ubuntu-latest
-    outputs:
-      resource-matrix: ${{ steps.create-matrix.outputs.matrix }}
+    environment: Dev  # Specifies the 'Dev' environment secrets
+
     steps:
+      # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Generate Dynamic Resource Matrix
-        id: create-matrix
-        run: |
-          echo "Reading resources configuration"
-          RESOURCES=$(jq -c '.resources' config/resources.json)
-
-          # Define batch size
-          BATCH_SIZE=5
-          echo "Splitting resources into batches of size $BATCH_SIZE"
-          
-          # Group resources into batches
-          MATRIX=$(echo $RESOURCES | jq -c "[reduce range(0; length; $BATCH_SIZE) as \$i ([]; . + [.[\$i:\$i+$BATCH_SIZE]])]")
-
-          echo "Matrix=$MATRIX"
-          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
-
-  process-resources:
-    needs: generate-matrix
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        batch: ${{ fromJson(needs.generate-matrix.outputs.resource-matrix) }}
-      max-parallel: 3  # Limit the number of parallel jobs
-    environment: Dev
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
+      # Step 2: Authenticate to Google Cloud
       - name: Authenticate to Google Cloud with Workload Identity Federation
         uses: google-github-actions/auth@v1
         with:
           workload_identity_provider: "projects/147961138027/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-pool"
           service_account: "github-ci-cd-dev@dev-env-441417.iam.gserviceaccount.com"
 
-      - name: Set up gcloud CLI
-        run: |
-          echo "Configuring gcloud CLI"
-          gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
-          gcloud config set compute/region europe-west4
-          gcloud config set compute/zone europe-west4-a
-
-      - name: Process Resource Batch
-        run: |
-          echo "Processing resource batch"
-          echo '${{ toJson(matrix.batch) }}' | jq -c '.[]' | while read -r RESOURCE; do
-            # Ensure RESOURCE is parsed as a JSON object
-            NAME=$(echo $RESOURCE | jq -r '.name')
-            ZONE=$(echo $RESOURCE | jq -r '.zone')
-            MACHINE_TYPE=$(echo $RESOURCE | jq -r '.machine_type')
-            IMAGE_FAMILY=$(echo $RESOURCE | jq -r '.image_family')
-            IMAGE_PROJECT=$(echo $RESOURCE | jq -r '.image_project')
-
-            if [[ -z "$NAME" || -z "$ZONE" || -z "$MACHINE_TYPE" || -z "$IMAGE_FAMILY" || -z "$IMAGE_PROJECT" ]]; then
-              echo "Invalid resource definition. Skipping..."
-              continue
-            fi
-
-            echo "Creating resource: $NAME"
-            gcloud compute instances create $NAME \
-              --zone=$ZONE \
-              --machine-type=$MACHINE_TYPE \
-              --image-family=$IMAGE_FAMILY \
-              --image-project=$IMAGE_PROJECT
-          done
-
-  validate-resources:
-    needs: process-resources
-    runs-on: ubuntu-latest
-    environment: Dev
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Authenticate to Google Cloud with Workload Identity Federation
-        uses: google-github-actions/auth@v1
+      # Step 3: Set up Terraform
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
         with:
-          workload_identity_provider: "projects/147961138027/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-pool"
-          service_account: "github-ci-cd-dev@dev-env-441417.iam.gserviceaccount.com"
+          terraform_version: 1.5.6
 
-      - name: Validate Resources
+      # Step 4: Export Environment Variables for Terraform
+      - name: Set environment variables
         run: |
-          echo "Validating created resources"
-          RESOURCES=$(jq -c '.resources[]' config/resources.json)
-          
-          for RESOURCE in $RESOURCES; do
-            NAME=$(echo $RESOURCE | jq -r '.name')
-            ZONE=$(echo $RESOURCE | jq -r '.zone')
-            
-            echo "Validating resource: $NAME in zone: $ZONE"
-            gcloud compute instances describe $NAME --zone=$ZONE || echo "Resource $NAME validation failed"
-          done
+          echo "TF_VAR_project_id=${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_ENV
+          echo "TF_VAR_region=europe-west4" >> $GITHUB_ENV
+          echo "TF_VAR_zone=europe-west4-a" >> $GITHUB_ENV
 
-  cleanup-resources:
-    if: always()  # Run cleanup even if previous steps fail
-    needs: [process-resources, validate-resources]
-    runs-on: ubuntu-latest
-    environment: Dev
+      # Step 5: Initialize Terraform
+      - name: Initialize Terraform
+        run: terraform init
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      # Step 6: Plan Terraform Changes
+      - name: Plan Terraform Changes
+        run: terraform plan -out=tfplan
 
-      - name: Authenticate to Google Cloud with Workload Identity Federation
-        uses: google-github-actions/auth@v1
-        with:
-          workload_identity_provider: "projects/147961138027/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-pool"
-          service_account: "github-ci-cd-dev@dev-env-441417.iam.gserviceaccount.com"
+      # Step 7: Apply Terraform Changes
+      - name: Apply Terraform Changes
+        run: terraform apply -auto-approve tfplan
 
+      # Step 8: (Optional) Output Resources
+      - name: Output Resource Information
+        run: terraform output -json > terraform_outputs.json
+
+      # Step 9: (Optional) Cleanup Resources (if required)
       - name: Cleanup Resources
-        run: |
-          echo "Cleaning up resources"
-          RESOURCES=$(jq -c '.resources[]' config/resources.json)
-          
-          for RESOURCE in $RESOURCES; do
-            NAME=$(echo $RESOURCE | jq -r '.name')
-            ZONE=$(echo $RESOURCE | jq -r '.zone')
-            
-            echo "Deleting resource: $NAME"
-            gcloud compute instances delete $NAME --zone=$ZONE --quiet
-          done
+        if: always()  # Ensure cleanup runs even if earlier steps fail
+        run: terraform destroy -auto-approve

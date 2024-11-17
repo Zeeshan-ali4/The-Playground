@@ -33,7 +33,7 @@ jobs:
 
           echo "Matrix=$MATRIX"
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
-          
+
   process-resources:
     needs: generate-matrix
     runs-on: ubuntu-latest
@@ -63,7 +63,7 @@ jobs:
       - name: Process Resource Batch
         run: |
           echo "Processing resource batch"
-          for RESOURCE in ${{ matrix.batch }}; do
+          echo '${{ toJson(matrix.batch) }}' | jq -c '.[]' | while read -r RESOURCE; do
             NAME=$(echo $RESOURCE | jq -r '.name')
             ZONE=$(echo $RESOURCE | jq -r '.zone')
             MACHINE_TYPE=$(echo $RESOURCE | jq -r '.machine_type')

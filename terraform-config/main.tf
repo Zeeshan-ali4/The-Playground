@@ -1,9 +1,8 @@
-provider "google" {
-  project = var.project_id
-  region  = "europe-west4"
+data "google_compute_image" "debian" {
+  family  = "debian-11"
+  project = "debian-cloud"
 }
 
-# VM 1
 resource "google_compute_instance" "test_instance_1" {
   name         = "test-instance-1"
   machine_type = "f1-micro"
@@ -11,8 +10,7 @@ resource "google_compute_instance" "test_instance_1" {
 
   boot_disk {
     initialize_params {
-      image_family = "debian-11"
-      image_project = "debian-cloud"
+      image = data.google_compute_image.debian.self_link
     }
   }
 
@@ -22,7 +20,6 @@ resource "google_compute_instance" "test_instance_1" {
   }
 }
 
-# VM 2
 resource "google_compute_instance" "test_instance_2" {
   name         = "test-instance-2"
   machine_type = "e2-micro"
@@ -30,8 +27,7 @@ resource "google_compute_instance" "test_instance_2" {
 
   boot_disk {
     initialize_params {
-      image_family = "debian-11"
-      image_project = "debian-cloud"
+      image = data.google_compute_image.debian.self_link
     }
   }
 

@@ -40,7 +40,7 @@ jobs:
     strategy:
       matrix:
         batch: ${{ fromJson(needs.generate-matrix.outputs.resource-matrix) }}
-      max-parallel: 3  # Limit the number of parallel jobs to avoid overloading
+      max-parallel: 3  # Limit the number of parallel jobs
     environment: Dev
 
     steps:
@@ -64,11 +64,17 @@ jobs:
         run: |
           echo "Processing resource batch"
           echo '${{ toJson(matrix.batch) }}' | jq -c '.[]' | while read -r RESOURCE; do
+            # Ensure RESOURCE is parsed as a JSON object
             NAME=$(echo $RESOURCE | jq -r '.name')
             ZONE=$(echo $RESOURCE | jq -r '.zone')
             MACHINE_TYPE=$(echo $RESOURCE | jq -r '.machine_type')
             IMAGE_FAMILY=$(echo $RESOURCE | jq -r '.image_family')
             IMAGE_PROJECT=$(echo $RESOURCE | jq -r '.image_project')
+
+            if [[ -z "$NAME" || -z "$ZONE" || -z "$MACHINE_TYPE" || -z "$IMAGE_FAMILY" || -z "$IMAGE_PROJECT" ]]; then
+              echo "Invalid resource definition. Skipping..."
+              continue
+            fi
 
             echo "Creating resource: $NAME"
             gcloud compute instances create $NAME \

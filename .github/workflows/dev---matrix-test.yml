@@ -1,18 +1,42 @@
-name: Dev Pipeline - Terraform Integration
+name: dev---matrix-test Pipeline - Terraform Integration
 
 on:
   push:
     branches:
-      - Dev
+      - dev---matrix-test
 
 permissions:
   id-token: write        # Required for OIDC token generation
   contents: read         # Allows access to the repository contents
 
 jobs:
+  discover-modules:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      # Step 2: Discover Modules
+      - name: Discover feature modules
+        id: set-matrix
+        run: |
+          modules=$(find terraform/modules/* -type d -exec basename {} \;)
+          matrix=$(echo "$modules" | jq -R -s -c 'split("\n")[:-1]')
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+
+
   terraform:
+    needs: discover-modules
     runs-on: ubuntu-latest
     environment: Dev  # Specifies the 'Dev' environment secrets
+
+    strategy:
+      matrix:
+        module: ${{ fromJson(needs.discover-modules.outputs.matrix) }}
 
     steps:
       # Step 1: Checkout code
@@ -41,26 +65,26 @@ jobs:
 
       # Step 5: Initialize Terraform
       - name: Initialize Terraform
-        working-directory: ./terraform-config
+        working-directory: ./terraform/modules/${{ matrix.module }}
         run: terraform init
 
       # Step 6: Plan Terraform Changes
       - name: Plan Terraform Changes
-        working-directory: ./terraform-config
+        working-directory: ./terraform/modules/${{ matrix.module }}
         run: terraform plan -out=tfplan
 
       # Step 7: Apply Terraform Changes
       - name: Apply Terraform Changes
-        working-directory: ./terraform-config
+        working-directory: ./terraform/modules/${{ matrix.module }}
         run: terraform apply -auto-approve tfplan
 
       # Step 8: (Optional) Output Resources
       - name: Output Resource Information
-        working-directory: ./terraform-config
+        working-directory: ./terraform/modules/${{ matrix.module }}
         run: terraform output -json > terraform_outputs.json
 
       # Step 9: (Optional) Cleanup Resources (if required)
       - name: Cleanup Resources
         if: always()  # Ensure cleanup runs even if earlier steps fail
-        working-directory: ./terraform-config
+        working-directory: ./terraform/modules/${{ matrix.module }}
         run: terraform destroy -auto-approve

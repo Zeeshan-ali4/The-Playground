@@ -9,7 +9,7 @@ import (
 func TestTerraformModule(t *testing.T) {
 	// Define Terraform options
 	terraformOptions := &terraform.Options{
-		TerraformDir: "../terraform/modules/example", // Path to the Terraform module
+		TerraformDir: "../terraform/modules", // Path to the Terraform module
 
 		// Variables passed to Terraform
 		Vars: map[string]interface{}{

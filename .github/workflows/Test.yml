@@ -99,11 +99,27 @@ jobs:
       - name: Plan Terraform Changes
         working-directory: ./terraform/modules/${{ matrix.module }}
         run: terraform plan -out=tfplan
+      
+      # Step 11: Apply Terraform Changes for Testing
+      - name: Apply Terraform Changes
+        working-directory: ./terraform/modules/${{ matrix.module }}
+        run: terraform apply -auto-approve tfplan
 
-      # Step 11: Run Terratest for Each Module
+      # Step 12: Run Terratest for Each Module
       - name: Run Terratest
         env:
           TERRAFORM_DIR: ../terraform/modules/${{ matrix.module }}
         run: |
           cd tests
-          go test -v .
+          go test -v -run TestTerraformModule -args ../terraform/modules/${{ matrix.module }}
+      
+      # Step 13: Validate Terraform Outputs (Optional)
+      - name: Validate Terraform Outputs
+        working-directory: ./terraform/modules/${{ matrix.module }}
+        run: terraform output -json > terraform_outputs.json
+
+      # Step 14: Cleanup Resources
+      - name: Cleanup Terraform Resources
+        if: always()  # Ensure cleanup runs even if earlier steps fail
+        working-directory: ./terraform/modules/${{ matrix.module }}
+        run: terraform destroy -auto-approve

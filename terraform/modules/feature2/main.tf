@@ -19,3 +19,7 @@ resource "google_compute_instance" "test_instance_2" {
     access_config {}
   }
 }
+
+output "example_output_variable" {
+  value = google_compute_instance.test_instance_2.name
+}

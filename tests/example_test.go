@@ -1,49 +1,66 @@
 package test
 
 import (
-	"encoding/json" // Import for JSON parsing
-	"os"
+	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require" // Useful for error handling
 )
 
-func TestTerraformModule(t *testing.T) {
-	// Get the Terraform directory from an environment variable
-	terraformDir := os.Getenv("TERRAFORM_DIR")
-	if terraformDir == "" {
-		t.Fatal("TERRAFORM_DIR environment variable not set")
-	}
+func TestTerraformModules(t *testing.T) {
+	// List of modules to test
+	modules := []string{"feature1", "feature2"}
 
-	// Define Terraform options
-	terraformOptions := &terraform.Options{
-		TerraformDir: terraformDir, // Path to the Terraform module
-
-		// Variables passed to Terraform
-		Vars: map[string]interface{}{
-			"region": "europe-west4",
+	// Expected outputs for each module
+	expectedOutputs := map[string]map[string]string{
+		"feature1": {
+			"instance_name": "test-instance-1",
+			"instance_zone": "europe-west4-a",
+			// IP is left empty because it's dynamically assigned
 		},
-
-		// Disable colors in Terraform logs (useful for CI logs)
-		NoColor: true,
+		"feature2": {
+			"instance_name": "test-instance-2",
+			"instance_zone": "europe-west4-b",
+		},
 	}
 
-	// Deploy resources and ensure cleanup after test
-	defer terraform.Destroy(t, terraformOptions) // Cleanup resources after test completion
-	terraform.InitAndApply(t, terraformOptions)
+	// Iterate over each module
+	for _, module := range modules {
+		t.Run(fmt.Sprintf("Testing module: %s", module), func(t *testing.T) {
+			// Define Terraform options for the current module
+			terraformOptions := &terraform.Options{
+				TerraformDir: fmt.Sprintf("../terraform/modules/%s", module),
+				Vars: map[string]interface{}{
+					"region": "europe-west4",
+				},
+				NoColor: true,
+			}
 
-	// Fetch Terraform output
-	output := terraform.Output(t, terraformOptions, "example_output_variable")
+			// Ensure resources are cleaned up at the end of the test
+			defer terraform.Destroy(t, terraformOptions)
 
-	// Parse the JSON output
-	var parsedOutput map[string]string
-	err := json.Unmarshal([]byte(output), &parsedOutput)
-	require.NoError(t, err, "Failed to parse Terraform output")
+			// Run Terraform Init and Apply
+			terraform.InitAndApply(t, terraformOptions)
 
-	// Validate specific fields
-	assert.Equal(t, "test-instance-1", parsedOutput["instance_name"], "Instance name mismatch")
-	assert.NotEmpty(t, parsedOutput["instance_ip"], "Instance IP should not be empty")
-	assert.Equal(t, "europe-west4-a", parsedOutput["instance_zone"], "Instance zone mismatch")
+			// Get the `example_output_variable` output
+			output := terraform.Output(t, terraformOptions, "example_output_variable")
+
+			// Parse the output as JSON
+			var outputData map[string]string
+			err := json.Unmarshal([]byte(output), &outputData)
+			assert.NoError(t, err, "Failed to parse output JSON for module %s", module)
+
+			// Compare the output with the expected values for the module
+			expected := expectedOutputs[module]
+
+			assert.Equal(t, expected["instance_name"], outputData["instance_name"], "Instance name mismatch for module %s", module)
+			assert.Equal(t, expected["instance_zone"], outputData["instance_zone"], "Instance zone mismatch for module %s", module)
+			assert.NotEmpty(t, outputData["instance_ip"], "Instance IP should not be empty for module %s", module)
+
+			// Optional: You can log the dynamically generated instance IP for reference
+			t.Logf("Module %s: Instance IP is %s", module, outputData["instance_ip"])
+		})
+	}
 }

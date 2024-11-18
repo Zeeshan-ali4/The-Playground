@@ -14,12 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-    
     steps:
       # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v2
-      
+
       # Step 2: Discover Modules
       - name: Discover feature modules
         id: set-matrix
@@ -27,7 +26,6 @@ jobs:
           modules=$(find terraform/modules/* -type d -exec basename {} \;)
           matrix=$(echo "$modules" | jq -R -s -c 'split("\n")[:-1]')
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
-
 
   terraform:
     needs: discover-modules
@@ -52,7 +50,7 @@ jobs:
       # Step 3: Verify the Go Version
       - name: Verify Go version
         run: go version
-      
+
       # Step 4: Initialise and install dependencies
       - name: Initialize Go Module and Install Dependencies
         run: |
@@ -96,14 +94,14 @@ jobs:
       - name: Validate Terraform
         working-directory: ./terraform/modules/${{ matrix.module }}
         run: terraform validate      
-      
+
       # Step 10: Plan Terraform Changes
       - name: Plan Terraform Changes
         working-directory: ./terraform/modules/${{ matrix.module }}
         run: terraform plan -out=tfplan
 
-      # Step 11: Run Terratest and Test Modules
+      # Step 11: Run Terratest for Each Module
       - name: Run Terratest
         run: |
           cd tests
-          go test -v .
+          go test -v -run TestTerraformModule -args ../terraform/modules/${{ matrix.module }}

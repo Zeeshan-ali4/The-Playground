@@ -1,10 +1,19 @@
 package test
 
 import (
+	"flag"
 	"testing"
+
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
 )
+
+var terraformDir string
+
+func init() {
+	flag.StringVar(&terraformDir, "args", "", "Path to the Terraform module")
+	flag.Parse()
+}
 
 func TestTerraformModule(t *testing.T) {
 	// Define Terraform options
@@ -16,12 +25,12 @@ func TestTerraformModule(t *testing.T) {
 			"region": "europe-west4",
 		},
 
-		// Disable colors in Terraform logs (useful for CI logs)
+		// Disable colors in Terraform logs
 		NoColor: true,
 	}
 
 	// Deploy resources and ensure cleanup after test
-	defer terraform.Destroy(t, terraformOptions) // Cleanup after test completion
+	defer terraform.Destroy(t, terraformOptions) // Cleanup resources
 	terraform.InitAndApply(t, terraformOptions)
 
 	// Validate Terraform output

@@ -63,6 +63,9 @@ jobs:
           else
             echo "Go module already exists"
           fi
+          go get github.com/gruntwork-io/terratest/modules/terraform
+          go get github.com/stretchr/testify/assert
+          go mod tidy
 
       # Step 5: Authenticate to Google Cloud
       - name: Authenticate to Google Cloud with Workload Identity Federation

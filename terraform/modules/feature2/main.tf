@@ -21,5 +21,9 @@ resource "google_compute_instance" "test_instance_2" {
 }
 
 output "example_output_variable" {
-  value = google_compute_instance.test_instance_2.name
+  value = jsonencode({
+    instance_name  = google_compute_instance.test_instance_2.name
+    instance_ip    = google_compute_instance.test_instance_2.network_interface[0].access_config[0].nat_ip
+    instance_zone  = google_compute_instance.test_instance_2.zone
+  })
 }

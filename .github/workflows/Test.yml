@@ -101,4 +101,6 @@ jobs:
 
       # Step 11: Run Terratest and Test Modules
       - name: Run Terratest
-        run: go test -v ./tests/
+        run: |
+          cd tests
+          go test -v .

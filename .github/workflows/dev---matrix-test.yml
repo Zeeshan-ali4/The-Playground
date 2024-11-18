@@ -1,9 +1,9 @@
-name: dev---matrix-test Pipeline - Terraform Integration
+name: Test Pipeline - Terraform Integration
 
 on:
   push:
     branches:
-      - dev---matrix-test
+      - Test
 
 permissions:
   id-token: write        # Required for OIDC token generation
@@ -43,48 +43,56 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Step 2: Authenticate to Google Cloud
+      # Step 2: Set up Go environment
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.20
+      
+      # Step 3: Initialise and install dependencies
+      - name: Initialize Go Module and Install Dependencies
+        run: |
+          cd tests
+          if [ ! -f "go.mod" ]; then
+            go mod init github.com/Zeeshan-ali4/The-Playground/tests
+          fi
+          go mod tidy
+
+      # Step 4: Authenticate to Google Cloud
       - name: Authenticate to Google Cloud with Workload Identity Federation
         uses: google-github-actions/auth@v1
         with:
           workload_identity_provider: "projects/147961138027/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-pool"
           service_account: "github-ci-cd-dev@dev-env-441417.iam.gserviceaccount.com"
 
-      # Step 3: Set up Terraform
+      # Step 5: Set up Terraform
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.6
 
-      # Step 4: Export Environment Variables for Terraform
+      # Step 6: Export Environment Variables for Terraform
       - name: Set environment variables
         run: |
           echo "TF_VAR_project_id=${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_ENV
           echo "TF_VAR_region=europe-west4" >> $GITHUB_ENV
           echo "TF_VAR_zone=europe-west4-a" >> $GITHUB_ENV
 
-      # Step 5: Initialize Terraform
+      # Step 7: Initialize Terraform
       - name: Initialize Terraform
         working-directory: ./terraform/modules/${{ matrix.module }}
         run: terraform init
 
-      # Step 6: Plan Terraform Changes
+      # Step 8: Validate Terraform Code
+      - name: Validate Terraform
+        working-directory: ./terraform/modules/${{ matrix.module }}
+        run: terraform validate      
+      
+      # Step 9: Plan Terraform Changes
       - name: Plan Terraform Changes
         working-directory: ./terraform/modules/${{ matrix.module }}
         run: terraform plan -out=tfplan
 
-      # Step 7: Apply Terraform Changes
-      - name: Apply Terraform Changes
-        working-directory: ./terraform/modules/${{ matrix.module }}
-        run: terraform apply -auto-approve tfplan
-
-      # Step 8: (Optional) Output Resources
-      - name: Output Resource Information
-        working-directory: ./terraform/modules/${{ matrix.module }}
-        run: terraform output -json > terraform_outputs.json
-
-      # Step 9: (Optional) Cleanup Resources (if required)
-      - name: Cleanup Resources
-        if: always()  # Ensure cleanup runs even if earlier steps fail
-        working-directory: ./terraform/modules/${{ matrix.module }}
-        run: terraform destroy -auto-approve
+      # Step 10: Test Modules
+      - name: Run Terratest
+        run: go test -v ./tests/${{ matrix.module }}

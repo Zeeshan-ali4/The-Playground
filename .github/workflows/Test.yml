@@ -48,8 +48,12 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: 1.20
+
+      # Step 3: Verify the Go Version
+      - name: Verify Go version
+        run: go version
       
-      # Step 3: Initialise and install dependencies
+      # Step 4: Initialise and install dependencies
       - name: Initialize Go Module and Install Dependencies
         run: |
           cd tests
@@ -58,41 +62,41 @@ jobs:
           fi
           go mod tidy
 
-      # Step 4: Authenticate to Google Cloud
+      # Step 5: Authenticate to Google Cloud
       - name: Authenticate to Google Cloud with Workload Identity Federation
         uses: google-github-actions/auth@v1
         with:
           workload_identity_provider: "projects/147961138027/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-pool"
           service_account: "github-ci-cd-dev@dev-env-441417.iam.gserviceaccount.com"
 
-      # Step 5: Set up Terraform
+      # Step 6: Set up Terraform
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.6
 
-      # Step 6: Export Environment Variables for Terraform
+      # Step 7: Export Environment Variables for Terraform
       - name: Set environment variables
         run: |
           echo "TF_VAR_project_id=${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_ENV
           echo "TF_VAR_region=europe-west4" >> $GITHUB_ENV
           echo "TF_VAR_zone=europe-west4-a" >> $GITHUB_ENV
 
-      # Step 7: Initialize Terraform
+      # Step 8: Initialize Terraform
       - name: Initialize Terraform
         working-directory: ./terraform/modules/${{ matrix.module }}
         run: terraform init
 
-      # Step 8: Validate Terraform Code
+      # Step 9: Validate Terraform Code
       - name: Validate Terraform
         working-directory: ./terraform/modules/${{ matrix.module }}
         run: terraform validate      
       
-      # Step 9: Plan Terraform Changes
+      # Step 10: Plan Terraform Changes
       - name: Plan Terraform Changes
         working-directory: ./terraform/modules/${{ matrix.module }}
         run: terraform plan -out=tfplan
 
-      # Step 10: Test Modules
+      # Step 11: Test Modules
       - name: Run Terratest
         run: go test -v ./tests/${{ matrix.module }}

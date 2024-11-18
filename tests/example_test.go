@@ -1,13 +1,13 @@
 package test
 
 import (
-	"encoding/json" // Import for JSON unmarshalling
+	"encoding/json" // Import for JSON parsing
 	"os"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require" // Import for error handling
+	"github.com/stretchr/testify/require" // Useful for error handling
 )
 
 func TestTerraformModule(t *testing.T) {
@@ -42,7 +42,7 @@ func TestTerraformModule(t *testing.T) {
 	err := json.Unmarshal([]byte(output), &parsedOutput)
 	require.NoError(t, err, "Failed to parse Terraform output")
 
-	// Perform validations
+	// Validate specific fields
 	assert.Equal(t, "test-instance-1", parsedOutput["instance_name"], "Instance name mismatch")
 	assert.NotEmpty(t, parsedOutput["instance_ip"], "Instance IP should not be empty")
 	assert.Equal(t, "europe-west4-a", parsedOutput["instance_zone"], "Instance zone mismatch")

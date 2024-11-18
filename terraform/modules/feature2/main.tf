@@ -3,8 +3,13 @@ data "google_compute_image" "debian" {
   project = "debian-cloud"
 }
 
+resource "random_pet" "instance_name" {
+  length = 2
+  separator = "-"
+}
+
 resource "google_compute_instance" "test_instance_2" {
-  name         = "test-instance-2"
+  name         = "test-instance-${random_pet.instance_name.id}"
   machine_type = "e2-micro"
   zone         = "europe-west4-b"
 

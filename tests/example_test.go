@@ -3,6 +3,7 @@ package test
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
@@ -16,12 +17,10 @@ func TestTerraformModules(t *testing.T) {
 	// Expected outputs for each module
 	expectedOutputs := map[string]map[string]string{
 		"feature1": {
-			"instance_name": "test-instance-1",
 			"instance_zone": "europe-west4-a",
-			// IP is left empty because it's dynamically assigned
+			// Leave "instance_name" blank for dynamic names
 		},
 		"feature2": {
-			"instance_name": "test-instance-2",
 			"instance_zone": "europe-west4-b",
 		},
 	}
@@ -42,9 +41,11 @@ func TestTerraformModules(t *testing.T) {
 			defer terraform.Destroy(t, terraformOptions)
 
 			// Run Terraform Init and Apply
+			t.Logf("Initializing and applying Terraform configuration for module: %s", module)
 			terraform.InitAndApply(t, terraformOptions)
 
 			// Get the `example_output_variable` output
+			t.Logf("Fetching output variable 'example_output_variable' for module: %s", module)
 			output := terraform.Output(t, terraformOptions, "example_output_variable")
 
 			// Parse the output as JSON
@@ -55,12 +56,25 @@ func TestTerraformModules(t *testing.T) {
 			// Compare the output with the expected values for the module
 			expected := expectedOutputs[module]
 
-			assert.Equal(t, expected["instance_name"], outputData["instance_name"], "Instance name mismatch for module %s", module)
+			// Validate instance zone
 			assert.Equal(t, expected["instance_zone"], outputData["instance_zone"], "Instance zone mismatch for module %s", module)
-			assert.NotEmpty(t, outputData["instance_ip"], "Instance IP should not be empty for module %s", module)
 
-			// Optional: You can log the dynamically generated instance IP for reference
-			t.Logf("Module %s: Instance IP is %s", module, outputData["instance_ip"])
+			// Validate instance name starts with "test-instance-" and ends with random_pet
+			instanceName := outputData["instance_name"]
+			assert.NotEmpty(t, instanceName, "Instance name should not be empty for module %s", module)
+			nameRegex := `^test-instance-[a-z]+-[a-z]+$`
+			match, _ := regexp.MatchString(nameRegex, instanceName)
+			assert.True(t, match, "Instance name '%s' does not match expected pattern for module %s", instanceName, module)
+
+			// Validate instance IP is not empty and has a valid format
+			instanceIP := outputData["instance_ip"]
+			assert.NotEmpty(t, instanceIP, "Instance IP should not be empty for module %s", module)
+			ipRegex := `^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`
+			match, _ = regexp.MatchString(ipRegex, instanceIP)
+			assert.True(t, match, "Instance IP '%s' is not a valid IPv4 address for module %s", instanceIP, module)
+
+			// Log instance details
+			t.Logf("Module %s: Instance Name: %s, Zone: %s, IP: %s", module, instanceName, outputData["instance_zone"], instanceIP)
 		})
 	}
 }

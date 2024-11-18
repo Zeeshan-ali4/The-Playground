@@ -102,6 +102,8 @@ jobs:
 
       # Step 11: Run Terratest for Each Module
       - name: Run Terratest
+        env:
+          TERRAFORM_DIR: ../terraform/modules/${{ matrix.module }}
         run: |
           cd tests
-          go test -v -run TestTerraformModule -args ../terraform/modules/${{ matrix.module }}
+          go test -v .

@@ -1,36 +1,35 @@
 package test
 
 import (
-	"flag"
+	"os"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
 )
 
-var terraformDir string
-
-func init() {
-	flag.StringVar(&terraformDir, "args", "", "Path to the Terraform module")
-	flag.Parse()
-}
-
 func TestTerraformModule(t *testing.T) {
+	// Get the Terraform directory from an environment variable
+	terraformDir := os.Getenv("TERRAFORM_DIR")
+	if terraformDir == "" {
+		t.Fatal("TERRAFORM_DIR environment variable not set")
+	}
+
 	// Define Terraform options
 	terraformOptions := &terraform.Options{
-		TerraformDir: "../terraform/modules", // Path to the Terraform module
+		TerraformDir: terraformDir, // Path to the Terraform module
 
 		// Variables passed to Terraform
 		Vars: map[string]interface{}{
 			"region": "europe-west4",
 		},
 
-		// Disable colors in Terraform logs
+		// Disable colors in Terraform logs (useful for CI logs)
 		NoColor: true,
 	}
 
 	// Deploy resources and ensure cleanup after test
-	defer terraform.Destroy(t, terraformOptions) // Cleanup resources
+	defer terraform.Destroy(t, terraformOptions) // Cleanup resources after test completion
 	terraform.InitAndApply(t, terraformOptions)
 
 	// Validate Terraform output

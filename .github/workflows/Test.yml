@@ -58,9 +58,11 @@ jobs:
         run: |
           cd tests
           if [ ! -f "go.mod" ]; then
+            echo "Initializing Go module"
             go mod init github.com/Zeeshan-ali4/The-Playground/tests
+          else
+            echo "Go module already exists"
           fi
-          go mod tidy
 
       # Step 5: Authenticate to Google Cloud
       - name: Authenticate to Google Cloud with Workload Identity Federation
@@ -97,6 +99,6 @@ jobs:
         working-directory: ./terraform/modules/${{ matrix.module }}
         run: terraform plan -out=tfplan
 
-      # Step 11: Test Modules
+      # Step 11: Run Terratest and Test Modules
       - name: Run Terratest
-        run: go test -v ./tests/${{ matrix.module }}
+        run: go test -v ./tests/

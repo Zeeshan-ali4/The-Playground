@@ -38,7 +38,10 @@ func TestTerraformModules(t *testing.T) {
 			}
 
 			// Ensure resources are cleaned up at the end of the test
-			defer terraform.Destroy(t, terraformOptions)
+			defer func() {
+				t.Logf("Cleaning up resources for module: %s", module)
+				terraform.Destroy(t, terraformOptions)
+			}()
 
 			// Run Terraform Init and Apply
 			t.Logf("Initializing and applying Terraform configuration for module: %s", module)

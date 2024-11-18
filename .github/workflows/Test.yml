@@ -76,6 +76,7 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
+          terraform_wrapper: false
           terraform_version: 1.9.8
 
       # Step 7: Export Environment Variables for Terraform

@@ -36,6 +36,30 @@ jobs:
         with:
           fetch-depth: 0
 
+    # Step 2: Set up Go environment
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      # Step 3: Verify the Go Version
+      - name: Verify Go version
+        run: go version
+
+      # Step 4: Initialise and install dependencies
+      - name: Initialize Go Module and Install Dependencies
+        run: |
+          cd tests
+          if [ ! -f "go.mod" ]; then
+            echo "Initializing Go module"
+            go mod init github.com/Zeeshan-ali4/The-Playground/tests
+          else
+            echo "Go module already exists"
+          fi
+          go get github.com/gruntwork-io/terratest/modules/terraform
+          go get github.com/stretchr/testify/assert
+          go mod tidy
+
       # Run Terratest to generate a coverage report
       - name: Run Terratest with Coverage
         run: |

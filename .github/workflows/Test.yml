@@ -30,10 +30,11 @@ jobs:
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
+    
     steps:
       - uses: actions/checout@v2
-      with:
-        fetch-depth: 0
+        with:
+          fetch-depth: 0
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:

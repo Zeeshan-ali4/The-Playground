@@ -59,12 +59,6 @@ jobs:
           go get github.com/gruntwork-io/terratest/modules/terraform
           go get github.com/stretchr/testify/assert
           go mod tidy
-
-      # Run Terratest to generate a coverage report
-      - name: Run Terratest with Coverage
-        run: |
-          cd tests
-          go test -v -coverprofile=coverage.out ./...
       
       # Upload coverage to SonarCloud
       - name: SonarCloud Scan

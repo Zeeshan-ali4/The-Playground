@@ -35,10 +35,25 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+
+      # Run Terratest to generate a coverage report
+      - name: Run Terratest with Coverage
+        run: |
+          cd tests
+          go test -v -coverprofile=coverage.out ./...
+      
+      # Upload coverage to SonarCloud
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=Zeeshan-ali4_The-Playground
+            -Dsonar.organization=zeeshan-ali4
+            -Dsonar.sources=terraform
+            -Dsonar.tests=tests
+            -Dsonar.go.coverage.reportPaths=tests/coverage.out
   
   terraform:
     needs: discover-modules

@@ -1,7 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class RegistrationScreen extends StatelessWidget {
+class RegistrationScreen extends StatefulWidget {
   static const String routeName = '/registration';
+
+  @override
+  _RegistrationScreenState createState() => _RegistrationScreenState();
+}
+
+class _RegistrationScreenState extends State<RegistrationScreen> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  bool _termsAccepted = false;
+
+  void _registerUser() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Passwords do not match')),
+      );
+      return;
+    }
+
+    if (!_termsAccepted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please accept the Terms and Conditions')),
+      );
+      return;
+    }
+
+    try {
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Registration successful!')),
+      );
+      // Navigate to another screen if needed
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,19 +72,23 @@ class RegistrationScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
+              controller: _emailController,
               decoration: InputDecoration(labelText: 'Email'),
             ),
             SizedBox(height: 16),
             TextField(
+              controller: _usernameController,
               decoration: InputDecoration(labelText: 'Username'),
             ),
             SizedBox(height: 16),
             TextField(
+              controller: _passwordController,
               obscureText: true,
               decoration: InputDecoration(labelText: 'Password'),
             ),
             SizedBox(height: 16),
             TextField(
+              controller: _confirmPasswordController,
               obscureText: true,
               decoration: InputDecoration(labelText: 'Confirm Password'),
             ),
@@ -44,8 +96,12 @@ class RegistrationScreen extends StatelessWidget {
             Row(
               children: [
                 Checkbox(
-                  value: true,
-                  onChanged: (value) {},
+                  value: _termsAccepted,
+                  onChanged: (value) {
+                    setState(() {
+                      _termsAccepted = value!;
+                    });
+                  },
                 ),
                 Text("I accept the Terms and Conditions"),
               ],
@@ -53,9 +109,7 @@ class RegistrationScreen extends StatelessWidget {
             SizedBox(height: 24),
             Center(
               child: ElevatedButton(
-                onPressed: () {
-                  // Add registration functionality
-                },
+                onPressed: _registerUser,
                 child: Text(
                   'Enter Noavant',
                   style: TextStyle(

@@ -75,13 +75,15 @@ class MyApp extends StatelessWidget {
               return const HomePage();
             }
 
-            // loading or any other state
-            return const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
-              ),
-            );
-          },
+            // loading
+            else {
+              return const Scaffold(
+                body: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            }
+          }, 
           // listener for errors
           listener: (context, state) {
             if (state is AuthError) {

@@ -13,7 +13,7 @@ ThemeData lightMode = ThemeData(
     primary: brandColor, // Main brand color for primary elements
     onPrimary: Colors.white, // Text/icons on primary-colored elements
     secondary: Colors.grey.shade300, // Accent or complementary color
-    onSecondary: Colors.black, // Text/icons on secondary-colored elements
+    onSecondary: Colors.grey.shade700, // Text/icons on secondary-colored elements
     surface: Colors.white, // For surfaces like cards
     onSurface: Colors.black, // Text/icons on surfaces
     background: Colors.grey.shade100, // General app background
@@ -61,7 +61,11 @@ ThemeData lightMode = ThemeData(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
       backgroundColor: brandColor, // Brand gradient can be applied here
       foregroundColor: Colors.white, // White text/icons on button
-      elevation: 3, // Subtle shadow
+      elevation: 5, // Subtle shadow
+      textStyle: const TextStyle( // Add default text style for buttons
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+      ),
     ),
   ),
 

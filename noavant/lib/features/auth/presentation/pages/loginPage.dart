@@ -13,11 +13,11 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // Text editing controllers
+  // Controllers
   final emailController = TextEditingController();
   final pwController = TextEditingController();
 
-  // Login button action
+  // Login action
   void login() {
     final String email = emailController.text;
     final String pw = pwController.text;
@@ -30,7 +30,7 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text("Please enter your email and password"),
-          backgroundColor: Colors.red[400],
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
     }
@@ -45,161 +45,108 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context); // Fetch theme for consistent usage
+
     return Scaffold(
-      body: Stack(
-        children: [
-          // Gradient background
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFFFFE5E5), // Light red/pink tone for fashion appeal
-                  Color(0xFFFFFFFF), // White to give a clean fade
-                ],
-              ),
-            ),
-          ),
+      appBar: AppBar(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        title: Text(
+          'noavant',
+          style: theme.textTheme.displayLarge?.copyWith(
+            color: theme.colorScheme.primary, // Primary color from theme
+            fontWeight: FontWeight.bold,
+          ), // Use title text styling
+        ),
+      ),
 
-          SafeArea(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // // App logo/icon with frosted effect
-                    // Container(
-                    //   decoration: BoxDecoration(
-                    //     color: Colors.white.withOpacity(0.7),
-                    //     borderRadius: BorderRadius.circular(20),
-                    //     boxShadow: [
-                    //       BoxShadow(
-                    //         color: Colors.black.withOpacity(0.1),
-                    //         blurRadius: 10,
-                    //         offset: Offset(0, 4),
-                    //       ),
-                    //     ],
-                    //   ),
-                    //   child: Padding(
-                    //     padding: const EdgeInsets.all(16.0),
-                    //     child: Icon(
-                    //       CupertinoIcons.lock_shield_fill,
-                    //       size: 80,
-                    //       color: Theme.of(context).colorScheme.primary,
-                    //     ),
-                    //   ),
-                    // ),
-                    // const SizedBox(height: 20),
 
-                    // Welcome message
-                    Text(
-                      "Welcome back!",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: "SF Pro Display",
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    
 
-                    Text(
-                      "You've been missed",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: "SF Pro Display",
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 30),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
 
-                    // Email text field
-                    MyTextField(
-                      controller: emailController,
-                      hintText: 'Email',
-                      obscureText: false,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Password text field
-                    MyTextField(
-                      controller: pwController,
-                      hintText: 'Password',
-                      obscureText: true,
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Login button with gradient
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Color(0xFFFF6B6B), // Vibrant red
-                            Color(0xFFFF8C42), // Warm orange
-                          ],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: ElevatedButton(
-                        onPressed: login,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 16,
-                          ),
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                        ),
-                        child: const Text(
-                          'Login',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Register link
-                    GestureDetector(
-                      onTap: widget.togglePages,
-                      child: Text.rich(
-                        TextSpan(
-                          text: "Not a member? ",
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Theme.of(context).colorScheme.onBackground,
-                          ),
-                          children: [
-                            TextSpan(
-                              text: "Register now!",
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
+              // Logo/Icon
+              Center(
+                child: Icon(
+                  CupertinoIcons.group_solid,
+                  size: 80,
+                  color: theme.colorScheme.primary, // Primary color from theme
                 ),
               ),
-            ),
+              // const SizedBox(height: 10),
+
+              // Headline
+              Text(
+                "Welcome Back",
+                textAlign: TextAlign.center,
+                style: theme.textTheme.displayMedium, // Use theme typography
+              ),
+              const SizedBox(height: 8),
+
+              // Subtext
+              Text(
+                "Sign in to continue your fashion journey.",
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium, // Use body text styling
+              ),
+              const SizedBox(height: 40),
+
+              // Email Input Field
+              MyTextField(
+                controller: emailController,
+                hintText: 'Email',
+                obscureText: false,
+                fillColor: theme.inputDecorationTheme.fillColor, // Theme color
+              ),
+              const SizedBox(height: 16),
+
+              // Password Input Field
+              MyTextField(
+                controller: pwController,
+                hintText: 'Password',
+                obscureText: true,
+                fillColor: theme.inputDecorationTheme.fillColor, // Theme color
+              ),
+              const SizedBox(height: 32),
+
+              // Login Button
+              ElevatedButton(
+                onPressed: login,
+                style: theme.elevatedButtonTheme.style, // Use themed button style
+                child: const Text(
+                  'Log In',
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Register Link
+              GestureDetector(
+                onTap: widget.togglePages,
+                child: Center(
+                  child: Text.rich(
+                    TextSpan(
+                      text: "Don’t have an account? ",
+                      style: theme.textTheme.bodyMedium, // Use body text style
+                      children: [
+                        TextSpan(
+                          text: "Register",
+                          style: TextStyle(
+                            color: theme.colorScheme.primary, // Primary color
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

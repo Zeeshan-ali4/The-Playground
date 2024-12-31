@@ -6,19 +6,24 @@ class MyTextField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
   final bool obscureText;
+  final Color? fillColor;
 
   const MyTextField({
     super.key,
     required this.controller,
     required this.hintText,
     required this.obscureText,
+    this.fillColor,
   });
+  
+  get cursorColor => null;
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
       obscureText: obscureText,
+      cursorColor: cursorColor ?? Theme.of(context).colorScheme.onSecondary,
       decoration: InputDecoration(
         //border when unselected
         enabledBorder: OutlineInputBorder(
@@ -27,13 +32,13 @@ class MyTextField extends StatelessWidget {
         ),          
         //border when selected
         focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.onSecondary),
           borderRadius: BorderRadius.circular(12),
         ),
 
         hintText: hintText,
         hintStyle: TextStyle(
-          color: Theme.of(context).colorScheme.primary,
+          color: Theme.of(context).colorScheme.onSecondary,
         ),
         fillColor: Theme.of(context).colorScheme.secondary,
         filled: true,

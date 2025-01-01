@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:noavant/features/auth/presentation/cubits/auth_cubit.dart'; // Import this if you're using Cubit for state management
+import "package:flutter/material.dart";
+import "package:noavant/design_elements/components/my_drawer.dart";
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,24 +11,42 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      // app bar
+      // App Bar
       appBar: AppBar(
-        title: const Text("Home Page"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout), // Icon for the logout button
-            tooltip: "Logout", // Tooltip when hovered (or long-pressed on mobile)
-            onPressed: () {
-              context.read<AuthCubit>().logout(); // Calls the logout function from the AuthCubit
-            },
+        backgroundColor: theme.colorScheme.primary,
+        title: Text(
+          "Home Page",
+          style: theme.textTheme.displayMedium?.copyWith(
+            color: theme.colorScheme.onPrimary,
           ),
-        ],
+        ),
       ),
 
-      // body
-      body: const Center(
-        child: Text("Welcome to the Home Page!"),
+      // Drawer
+      drawer: const MyDrawer(),
+
+      // Body
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Placeholder for Features or Sections
+              Expanded(
+                child: Center(
+                  child: Text(
+                    "Your features will appear here.",
+                    style: theme.textTheme.bodyLarge,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -1,12 +1,10 @@
-
-
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:noavant/features/auth/presentation/components/my_button.dart';
 import 'package:noavant/features/auth/presentation/components/my_text_field.dart';
 import 'package:noavant/features/auth/presentation/cubits/auth_cubit.dart';
 
-class RegisterPage extends StatefulWidget{
+class RegisterPage extends StatefulWidget {
   final void Function()? togglePages;
 
   const RegisterPage({super.key, required this.togglePages});
@@ -16,47 +14,39 @@ class RegisterPage extends StatefulWidget{
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  
-  // Text editing controllers
+  // Controllers
   final nameController = TextEditingController();
   final emailController = TextEditingController();
   final pwController = TextEditingController();
   final confirmPwController = TextEditingController();
 
-  // Register function
+  // Register action
   void register() {
-
-    // prepare info
-    final String name = nameController.text;
+    final String name = nameController.text.trim();
     final String email = emailController.text.trim();
     final String pw = pwController.text;
     final String confirmPw = confirmPwController.text;
 
-    // auth cubit
     final authCubit = context.read<AuthCubit>();
 
-    // check if fields aren't empty
-    if (email.isNotEmpty &&
-        name.isNotEmpty &&
-        pw.isNotEmpty &&
-        confirmPw.isNotEmpty) {
-
-          // check if passwords match
-          if (pw == confirmPw) {
-            authCubit.register(email, pw, name);
-          }
-
-          // passwords dont match -> show error message
-          else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Passwords don't match!")));
-          }
-        }
-
-    // fields are empty -> show error message
-    else {
+    if (name.isNotEmpty && email.isNotEmpty && pw.isNotEmpty && confirmPw.isNotEmpty) {
+      if (pw == confirmPw) {
+        authCubit.register(email, pw, name);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text("Passwords don't match!"),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill in all fields!")));
+        SnackBar(
+          content: const Text("Please fill in all fields!"),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
     }
   }
 
@@ -69,120 +59,120 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  // Build UI
   @override
   Widget build(BuildContext context) {
-    // Scaffold
+    final theme = Theme.of(context);
+
     return Scaffold(
-      // Appbar
       appBar: AppBar(
-        title: Text("noavant"),
+        backgroundColor: theme.scaffoldBackgroundColor,
+        title: Text(
+          'noavant',
+          style: theme.textTheme.displayLarge?.copyWith(
+            color: theme.colorScheme.primary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
-
-      // Body
       body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25.0),
-            child: Column(
-
-              mainAxisAlignment: MainAxisAlignment.center,
-
-              children: [
-            
-                // Logo for the app
-                Icon(Icons.lock_open_rounded, size:80,
-                  color:  Theme.of(context).colorScheme.primary,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Logo/Icon
+              Center(
+                child: Icon(
+                  CupertinoIcons.person_crop_circle_badge_plus,
+                  size: 80,
+                  color: theme.colorScheme.primary,
                 ),
-            
-                // Create account message 
-                Text(
-                  "Let's create an account for you!",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(height: 16),
+
+              // Headline
+              Text(
+                "Create Your Account",
+                textAlign: TextAlign.center,
+                style: theme.textTheme.displayMedium,
+              ),
+              const SizedBox(height: 8),
+
+              // Subtext
+              Text(
+                "Join us and begin your fashion journey.",
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 40),
+
+              // Name Input Field
+              MyTextField(
+                controller: nameController,
+                hintText: 'Name',
+                obscureText: false,
+                fillColor: theme.inputDecorationTheme.fillColor,
+              ),
+              const SizedBox(height: 16),
+
+              // Email Input Field
+              MyTextField(
+                controller: emailController,
+                hintText: 'Email',
+                obscureText: false,
+                fillColor: theme.inputDecorationTheme.fillColor,
+              ),
+              const SizedBox(height: 16),
+
+              // Password Input Field
+              MyTextField(
+                controller: pwController,
+                hintText: 'Password',
+                obscureText: true,
+                fillColor: theme.inputDecorationTheme.fillColor,
+              ),
+              const SizedBox(height: 16),
+
+              // Confirm Password Input Field
+              MyTextField(
+                controller: confirmPwController,
+                hintText: 'Confirm Password',
+                obscureText: true,
+                fillColor: theme.inputDecorationTheme.fillColor,
+              ),
+              const SizedBox(height: 32),
+
+              // Register Button
+              ElevatedButton(
+                onPressed: register,
+                style: theme.elevatedButtonTheme.style,
+                child: const Text('Register'),
+              ),
+              const SizedBox(height: 16),
+
+              // Login Link
+              GestureDetector(
+                onTap: widget.togglePages,
+                child: Center(
+                  child: Text.rich(
+                    TextSpan(
+                      text: "Already have an account? ",
+                      style: theme.textTheme.bodyMedium,
+                      children: [
+                        TextSpan(
+                          text: "Log In",
+                          style: TextStyle(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-
-                const SizedBox(height: 25),
-
-                // name textfield
-            
-                MyTextField(
-                  controller: nameController,
-                  hintText: 'Name',
-                  obscureText: false,
-                ),
-
-                const SizedBox(height: 10),
-            
-                // email textfield
-            
-                MyTextField(
-                  controller: emailController,
-                  hintText: 'Email',
-                  obscureText: false,
-                ),
-
-                const SizedBox(height: 10),
-            
-                // password textfield
-
-                MyTextField(
-                  controller: pwController,
-                  hintText: 'Password',
-                  obscureText: true,
-                ),
-
-                const SizedBox(height: 10),
-
-                // Confirm password textfield
-
-                MyTextField(
-                  controller: confirmPwController,
-                  hintText: 'Confirm Password',
-                  obscureText: true,
-                ),
-
-                const SizedBox(height: 25),
-            
-                // Register button
-                MyButton(
-                  onTap: register, 
-                  text: 'Register',
-                ),
-
-                const SizedBox(height: 10),
-            
-                // Already a member? Login now
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Already a member?",
-                      style:
-                      TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    GestureDetector(
-                      onTap: widget.togglePages,
-                      child: Text(
-                        " Login now!",
-                        style:
-                        TextStyle(
-                          color: Theme.of(context).colorScheme.inversePrimary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

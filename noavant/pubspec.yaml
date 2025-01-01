@@ -4,7 +4,7 @@ publish_to: 'none'
 version: 0.1.0
 
 environment:
-  sdk: ^3.6.0
+  sdk: ^3.5.4
 
 dependencies:
   flutter_bloc: ^8.1.3

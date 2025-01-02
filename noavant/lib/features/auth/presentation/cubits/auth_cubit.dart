@@ -1,10 +1,3 @@
-
-/*
-
-Auth Cubit: State Management
-
-*/
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:noavant/features/auth/domain/entities/app_user.dart';
 import 'package:noavant/features/auth/domain/repos/auth_repo.dart';
@@ -16,27 +9,10 @@ class AuthCubit extends Cubit<AuthState> {
 
   AuthCubit({required this.authRepo}) : super(AuthInitial());
 
-  // check if user is authenticated
-  void checkAuth() async{
-    final AppUser? user = await authRepo.getCurrentUser();
-
-    if (user != null) {
-      _currentUser = user;
-      emit(Authenticated(user));
-    } else {
-      emit(Unauthenticated());
-    }
-  }
-
-  // get current user
-  AppUser? get currentUser => _currentUser;
-
-  // login
-  Future<void> login(String email, String pw) async {
+  // Check if the user is authenticated
+  void checkAuth() async {
     try {
-      emit(AuthLoading());
-      final user = await authRepo.loginWithEmailAndPassword(email, pw);
-      
+      final AppUser? user = await authRepo.getCurrentUser();
       if (user != null) {
         _currentUser = user;
         emit(Authenticated(user));
@@ -44,22 +20,35 @@ class AuthCubit extends Cubit<AuthState> {
         emit(Unauthenticated());
       }
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthError("Failed to check authentication: ${e.toString()}"));
+    }
+  }
+
+  // Get current user
+  AppUser? get currentUser => _currentUser;
+
+  // Login
+  Future<void> login(String email, String pw) async {
+    try {
+      emit(AuthLoading());
+      final user = await authRepo.loginWithEmailAndPassword(email, pw);
+      if (user != null) {
+        _currentUser = user;
+        emit(Authenticated(user));
+      } else {
+        emit(Unauthenticated());
+      }
+    } catch (e) {
+      emit(AuthError("Login failed: ${e.toString()}"));
       emit(Unauthenticated());
     }
   }
 
-
-  // register
-
+  // Register
   Future<void> register(String email, String pw, String name) async {
-    print("Attempting to register user...");
-    print("Email: $email, Password: $pw");
-
     try {
       emit(AuthLoading());
       final user = await authRepo.registerWithEmailAndPassword(email, pw, name);
-      
       if (user != null) {
         _currentUser = user;
         emit(Authenticated(user));
@@ -71,16 +60,15 @@ class AuthCubit extends Cubit<AuthState> {
       emit(Unauthenticated());
     }
   }
-  
-  // logout
 
+  // Logout
   Future<void> logout() async {
     try {
       await authRepo.logout();
       _currentUser = null;
       emit(Unauthenticated());
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthError("Logout failed: ${e.toString()}"));
     }
   }
 }

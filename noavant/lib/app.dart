@@ -8,7 +8,7 @@ import 'package:noavant/features/auth/presentation/pages/auth_page.dart';
 import 'package:noavant/features/home/home_page.dart';
 import 'package:noavant/features/profile/firebase_profile_repo.dart';
 import 'package:noavant/features/profile/profile_cubit.dart';
-import 'package:noavant/themes/light_mode.dart';
+import 'package:noavant/design_elements/themes/light_mode.dart';
 
 /*
 

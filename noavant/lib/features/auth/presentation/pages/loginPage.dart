@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:noavant/features/auth/presentation/components/my_text_field.dart';
+import 'package:noavant/design_elements/components/my_text_field.dart';
 import 'package:noavant/features/auth/presentation/cubits/auth_cubit.dart';
 
 class LoginPage extends StatefulWidget {

@@ -4,9 +4,10 @@ import 'package:noavant/features/profile/profile_states.dart';
 
 class ProfileCubit extends Cubit<ProfileState> {
   final ProfileRepo profileRepo;
+
   ProfileCubit({required this.profileRepo}) : super(ProfileInitial());
 
-  // fetch user profile using repo
+  // Fetch user profile using the repository
   Future<void> fetchUserProfile(String uid) async {
     try {
       emit(ProfileLoading());
@@ -18,40 +19,40 @@ class ProfileCubit extends Cubit<ProfileState> {
         emit(ProfileError('User not found'));
       }
     } catch (e) {
-      emit(ProfileError(e.toString()));
+      emit(ProfileError('Failed to fetch profile: $e'));
     }
   }
 
-  // update bio and or profile picture
+  // Update bio and/or profile picture
   Future<void> updateProfile({
     required String uid,
     String? newBio,
+    String? newProfileImageUrl,
   }) async {
-    emit (ProfileLoading());
+    emit(ProfileLoading());
 
-    try{
-
-      // fetch current user profile first
+    try {
+      // Fetch the current user profile first
       final currentUser = await profileRepo.fetchUserProfile(uid);
 
       if (currentUser == null) {
-        emit(ProfileError("Failed to fetch user profile for update"));
+        emit(ProfileError('Failed to fetch user profile for update'));
         return;
       }
 
-      // profile picture update
+      // Create an updated profile object
+      final updatedProfile = currentUser.copyWith(
+        newBio: newBio ?? currentUser.bio,
+        newProfileImageUrl: newProfileImageUrl ?? currentUser.profileImageUrl,
+      );
 
-      // update new profile
-      final updatedProfile = 
-          currentUser.copyWith(newBio: newBio ?? currentUser.bio);
+      // Update the profile in the repository
+      await profileRepo.updateProfile(updatedProfile);
 
-      // update in repo
-      await profileRepo.updateProfile(updatedProfile); 
-
-      // re-fetch the updated profile
+      // Re-fetch the updated profile to reflect changes
       await fetchUserProfile(uid);
     } catch (e) {
-      emit(ProfileError("Error updating profile: $e"));
+      emit(ProfileError('Error updating profile: $e'));
     }
   }
 }

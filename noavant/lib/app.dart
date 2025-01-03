@@ -6,6 +6,10 @@ import 'package:noavant/features/auth/presentation/cubits/auth_states.dart';
 import 'package:noavant/features/auth/presentation/pages/auth_page.dart';
 import 'package:noavant/features/home/home_page.dart';
 import 'package:noavant/design_elements/themes/light_mode.dart';
+import 'package:noavant/features/profile/profile_cubit.dart';
+import 'package:noavant/features/profile/profile_repo.dart';
+import 'package:noavant/features/profile/supabase_profile_repo.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 
 /*
 
@@ -23,9 +27,16 @@ Check Auth State
 
 */
 
+final supbaseClient = supabase.Supabase.instance.client;
+
 class MyApp extends StatelessWidget {
   // auth repo
   final authRepo = SupabaseAuthRepo();
+
+  // profile repo
+  final profileRepo = SupabaseProfileRepo(
+    supabaseClient: supbaseClient,
+  );
 
   MyApp({super.key});
 
@@ -37,6 +48,11 @@ class MyApp extends StatelessWidget {
         // auth cubit
         BlocProvider<AuthCubit>(
           create: (context) => AuthCubit(authRepo: authRepo)..checkAuth(),
+        ),
+
+        // profile cubit
+        BlocProvider<ProfileCubit>(
+          create: (context) => ProfileCubit(profileRepo: profileRepo),
         ),
       ],
       child: MaterialApp(

@@ -1,7 +1,6 @@
 import 'package:noavant/features/auth/domain/entities/app_user.dart';
 
 class ProfileUser extends AppUser {
-
   final String bio;
   final String profileImageUrl;
 
@@ -13,7 +12,7 @@ class ProfileUser extends AppUser {
     required this.profileImageUrl,
   });
 
-  // method to update profile user
+  // Method to update profile user
   ProfileUser copyWith({String? newBio, String? newProfileImageUrl}) {
     return ProfileUser(
       uid: uid,
@@ -24,10 +23,10 @@ class ProfileUser extends AppUser {
     );
   }
 
-  // convert profile user to json
+  // Convert profile user to JSON
   Map<String, dynamic> toJson() {
     return {
-      'uid': uid,
+      'id': uid, // Supabase uses 'id' for user ID
       'email': email,
       'name': name,
       'bio': bio,
@@ -35,15 +34,14 @@ class ProfileUser extends AppUser {
     };
   }
 
-  // convert json to profile user
+  // Convert JSON to profile user
   factory ProfileUser.fromJson(Map<String, dynamic> jsonUser) {
     return ProfileUser(
-      uid: jsonUser['uid'],
+      uid: jsonUser['id'], // Supabase uses 'id' for user ID
       email: jsonUser['email'],
-      name: jsonUser['name'],
+      name: jsonUser['name'] ?? '',
       bio: jsonUser['bio'] ?? '',
       profileImageUrl: jsonUser['profileImageUrl'] ?? '',
     );
   }
-
 }

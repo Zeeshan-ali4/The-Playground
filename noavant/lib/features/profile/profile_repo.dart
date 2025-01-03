@@ -1,12 +1,3 @@
-/* 
-
-
-Profile Repository
-Different operations we can do for profiles
-
-
-*/ 
-
 import 'package:noavant/features/profile/profile_user.dart';
 
 abstract class ProfileRepo {
